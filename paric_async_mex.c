@@ -42,6 +42,7 @@ void parilu_sym(int n, int nnz,
     int i, j;
     double s;
     int il, iu, jl, ju;
+    int failed = 0; // shared by all threads
 
 #pragma omp parallel num_threads(numthreads) private(iter,k,i,j,s,il,iu,jl,ju)
     {
@@ -79,10 +80,17 @@ void parilu_sym(int n, int nnz,
 
                 // modify u entry
                 if (i == j)
+                {
+                    if (s <= 0.) failed = 1;
                     au[iu-1] = sqrt(s);
+                }
                 else
                     au[iu-1] = s / au[il-1];
             }
+            // end omp loop
+
+            if (failed)
+                mexErrMsgTxt("negative or zero pivot");
         }
     }
 }
