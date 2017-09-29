@@ -1,5 +1,5 @@
 function [u d resid] = pariutdu_ref(a, u0, d0, numsweeps)
-% [u d resid] = pariutdu_ref(a, u0, numsweeps)
+% [u d resid] = pariutdu_ref(a, u0, d0, numsweeps)
 % compute: u'*d*u, where u has unit diagonal and d is diagonal
 %   Synchronous updates
 %
