@@ -1,4 +1,4 @@
-numsweeps  = 50; % useful cases: 1 and small values and large values
+numsweeps  = 1; % useful cases: 1 and small values and large values
 numthreads = 4; % useful cases: 1 and 4 and larger values
 
 a = delsq(numgrid('S',10));
@@ -37,9 +37,16 @@ fprintf('parilu_ref:U   %e\n', norm(u-u_ilu,'fro')/norm(u_ilu,'fro'));
 % test parilu
 l = tril(a);
 u = triu(a);
+[l u] = parilu(a, l, u, 1, numsweeps, numthreads);
+fprintf('parilu/sync:L  %e\n', norm(l-l_ilu,'fro')/norm(l_ilu,'fro'));
+fprintf('parilu/sync:U  %e\n', norm(u-u_ilu,'fro')/norm(u_ilu,'fro'));
+
+% test parilu
+l = tril(a);
+u = triu(a);
 [l u] = parilu(a, l, u, 0, numsweeps, numthreads);
-fprintf('parilu/asy:L   %e\n', norm(l-l_ilu,'fro')/norm(l_ilu,'fro'));
-fprintf('parilu/asy:U   %e\n', norm(u-u_ilu,'fro')/norm(u_ilu,'fro'));
+fprintf('parilu/async:L %e\n', norm(l-l_ilu,'fro')/norm(l_ilu,'fro'));
+fprintf('parilu/async:U %e\n', norm(u-u_ilu,'fro')/norm(u_ilu,'fro'));
 
 % test pariutdt_ref (sync)
 u = triu(a);
