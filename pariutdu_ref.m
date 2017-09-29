@@ -5,7 +5,8 @@ function [u d resid] = pariutdu_ref(a, u0, d0, numsweeps)
 %
 % a         = sparse matrix should be scaled to have unit diagonal
 % u0        = input guess, with unit diagonal
-% d0        = input guess, usually the identity matrix
+% d0        = input guess, usually the identity matrix, but may contain
+%             both positive and negative entries
 % numsweeps = number of nonlinear fixed-point sweeps
 % resid     = nonlinear residual norm history (optional)
 

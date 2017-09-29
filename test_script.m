@@ -26,7 +26,6 @@ u = triu(a);
 u = paric(a, u, 0, numsweeps, numthreads);
 fprintf('paric/async:   %e\n', norm(u-u_ichol,'fro')/norm(u_ichol,'fro'));
 
-
 % test parilu_ref
 l = tril(a);
 u = triu(a);
@@ -34,14 +33,14 @@ u = triu(a);
 fprintf('parilu_ref:L   %e\n', norm(l-l_ilu,'fro')/norm(l_ilu,'fro'));
 fprintf('parilu_ref:U   %e\n', norm(u-u_ilu,'fro')/norm(u_ilu,'fro'));
 
-% test parilu
+% test parilu/synchronous
 l = tril(a);
 u = triu(a);
 [l u] = parilu(a, l, u, 1, numsweeps, numthreads);
 fprintf('parilu/sync:L  %e\n', norm(l-l_ilu,'fro')/norm(l_ilu,'fro'));
 fprintf('parilu/sync:U  %e\n', norm(u-u_ilu,'fro')/norm(u_ilu,'fro'));
 
-% test parilu
+% test parilu/asynchronous
 l = tril(a);
 u = triu(a);
 [l u] = parilu(a, l, u, 0, numsweeps, numthreads);
@@ -49,6 +48,9 @@ fprintf('parilu/async:L %e\n', norm(l-l_ilu,'fro')/norm(l_ilu,'fro'));
 fprintf('parilu/async:U %e\n', norm(u-u_ilu,'fro')/norm(u_ilu,'fro'));
 
 % test pariutdt_ref (sync)
+% note that if the matrix contains both positive and negative diagonal elements,
+% the diagscale function is not sufficient for scaling the problem properly
+% (need to produce a diagonal matrix with both pos and neg entries)
 u = triu(a);
 d = speye(length(a));
 [u d] = pariutdu_ref(a, u, d, numsweeps);
