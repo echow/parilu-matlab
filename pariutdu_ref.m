@@ -1,17 +1,22 @@
-function [u d resid] = parildlt_sync(a, u0, d0, numsweeps)
-% [u d resid] = parildlt_sync(a, u0, numsweeps)
-% compute: u'*d*u, where u has unit diagonal
-% a = sparse matrix should be scaled to have unit diagonal
-% u0 = input guess, where u should have unit diagonal
-% d0 = input guess, usually the identity matrix
+function [u d resid] = pariutdu_ref(a, u0, d0, numsweeps)
+% [u d resid] = pariutdu_ref(a, u0, numsweeps)
+% compute: u'*d*u, where u has unit diagonal and d is diagonal
+%   Synchronous updates
+%
+% a         = sparse matrix should be scaled to have unit diagonal
+% u0        = input guess, with unit diagonal
+% d0        = input guess, usually the identity matrix
 % numsweeps = number of nonlinear fixed-point sweeps
-% resid = nonlinear residual norm history (Frobenius norm)
+% resid     = nonlinear residual norm history (optional)
+
 % note: more efficient to compute U because matrices are stored by columns
 
-resid = zeros(numsweeps+1, 1);
-resid(1) = norm((a-u0'*d0*u0).*spones(a),'fro');
+if nargout > 2
+    resid = zeros(numsweeps+1, 1);
+    resid(1) = norm((a-u0'*d0*u0).*spones(a),'fro');
+end
 
-% set of nonzeros of u in column-major ordering
+% find nonzeros of u in column-major ordering
 pat = spones(u0);
 [Si Sj Sa] = find(a.*pat + eps*pat);
 m = length(Sa);
@@ -42,7 +47,8 @@ for iter=1:numsweeps
     u0 = u;
     dvec0 = dvec;
     
-    % nonlinear residual norm
-    resid(iter+1) = norm((a-u'*diag(dvec)*u).*spones(a),'fro');
+    if nargout > 2
+        resid(iter+1) = norm((a-u'*diag(dvec)*u).*spones(a),'fro');
+    end
 end
 d = diag(dvec);
