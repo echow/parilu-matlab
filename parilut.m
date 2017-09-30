@@ -34,10 +34,16 @@ for sweep = 1:numsweeps
   [ci cj cval] = find(l);
   [~, ind] = sort(abs(cval), 1, 'descend');
   l = sparse(ci(ind(1:nzl)),cj(ind(1:nzl)),cval(ind(1:nzl)),n,n);
+  if nnz(diag(l) == 0)
+    error('L diagonal element dropped');
+  end
 
   [ci cj cval] = find(u);
   [~, ind] = sort(abs(cval), 1, 'descend');
   u = sparse(ci(ind(1:nzu)),cj(ind(1:nzu)),cval(ind(1:nzu)),n,n);
+  if nnz(diag(u) == 0)
+    error('U diagonal element dropped');
+  end
 
   % run parilu step
   pat = spones(spones(l) + spones(u));

@@ -10,8 +10,6 @@ function [u d resid] = pariutdu_ref(a, u0, d0, numsweeps)
 % numsweeps = number of nonlinear fixed-point sweeps
 % resid     = nonlinear residual norm history (optional)
 
-% note: more efficient to compute U because matrices are stored by columns
-
 if nargout > 2
     resid = zeros(numsweeps+1, 1);
     resid(1) = norm((a-u0'*d0*u0).*spones(a),'fro');

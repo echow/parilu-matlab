@@ -1,7 +1,7 @@
-numsweeps  = 1; % useful cases: 1 and small values and large values
+numsweeps  = 7; % useful cases: 1 and small values and large values
 numthreads = 4; % useful cases: 1 and 4 and larger values
 
-a = delsq(numgrid('S',10));
+a = delsq(numgrid('S',40));
 a = diagscale(a);
 u_ichol = ichol(a)';
 [l_ilu u_ilu] = ilu(a);
@@ -48,10 +48,19 @@ fprintf('parilu/async:L %e\n', norm(l-l_ilu,'fro')/norm(l_ilu,'fro'));
 fprintf('parilu/async:U %e\n', norm(u-u_ilu,'fro')/norm(u_ilu,'fro'));
 
 % test pariutdt_ref (sync)
-% note that if the matrix contains both positive and negative diagonal elements,
-% the diagscale function is not sufficient for scaling the problem properly
-% (need to produce a diagonal matrix with both pos and neg entries)
 u = triu(a);
 d = speye(length(a));
-[u d] = pariutdu_ref(a, u, d, numsweeps);
+[u d resid] = pariutdu_ref(a, u, d, numsweeps);
 fprintf('pariutdu_ref:  %e\n', norm(u-l_ilu','fro')/norm(l_ilu,'fro'));
+
+% test pariutdt/synchronous
+u = triu(a);
+d = speye(length(a));
+[u d] = pariutdu(a, u, d, 1, numsweeps, numthreads);
+fprintf('pariutdu/sync: %e\n', norm(u-l_ilu','fro')/norm(l_ilu,'fro'));
+
+% test pariutdt/asynchronous
+u = triu(a);
+d = speye(length(a));
+[u d] = pariutdu(a, u, d, 0, numsweeps, numthreads);
+fprintf('pariutdu/asyn: %e\n', norm(u-l_ilu','fro')/norm(l_ilu,'fro'));
