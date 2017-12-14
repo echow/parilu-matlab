@@ -7,8 +7,8 @@ function [l u] = parilut(a, l, u, sync_notsync, numsweeps, numthreads)
 % could redesign this function so that it only performs a single sweep
 
 n = length(a);
-nzl = nnz(tril(a));
-nzu = nnz(triu(a));
+nzl = nnz(l); % bug fixed 11/23/2017;
+nzu = nnz(u); % bug fixed 11/23/2017;
 
 for sweep = 1:numsweeps
 

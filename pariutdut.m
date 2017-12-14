@@ -7,7 +7,7 @@ function [u d] = pariutdut(a, u, d, sync_notsync, numsweeps, numthreads)
 % could redesign this function so that it only performs a single sweep
 
 n = length(a);
-nz = nnz(triu(a));
+nz = nnz(u); % bug fixed 11/23/2017
 
 for sweep = 1:numsweeps
 

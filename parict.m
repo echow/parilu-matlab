@@ -7,7 +7,8 @@ function u = parict(a, u, sync_notsync, numsweeps, numthreads)
 % could redesign this function so that it only performs a single sweep
 
 n = length(a);
-nz = nnz(triu(a));
+nz = nnz(triu(a)); % bug: fixed 11/23/2017
+nz = nnz(u);       % bug: fixed 11/23/2017
 
 for sweep = 1:numsweeps
 
@@ -45,4 +46,3 @@ for sweep = 1:numsweeps
   end
 
 end
-

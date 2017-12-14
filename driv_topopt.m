@@ -2,12 +2,12 @@ clear all
 numthreads = 4;
 first = 60;
 for matnum=first:69
-  filename = sprintf('/home/edmond/matrices.topopt/system_%05d.mat', matnum);
+  filename = sprintf('/home/edmond/apiary/matrices.topopt/system_%05d.mat', matnum);
   prob = load(filename);
   a = prob.A;
   a = (a+a')/2;
   a = diagscale(a);
-  afun = @(x) a'*x;
+  afun = @(x) matvec_mex(a,x);
   rng(0);
   n = length(a);
   b = rand(length(a),1)-.5;
@@ -19,7 +19,7 @@ for matnum=first:69
   else
     for sweep = 0:10
       if (sweep > 0)
-        u = parict(a, u, 1, numthreads);
+        u = parict(a, u, 1, 1, numthreads);
       end
 
       [x flag relres iter resvec] = pcg(afun, b, 1e-6, 2000, u', u);
