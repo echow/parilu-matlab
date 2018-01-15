@@ -98,5 +98,24 @@ plot(a(:,1),a(:,6));
 xlabel('Number of sweeps');
 ylabel('PCG iterations');
 grid on
-fig=gcf;fig.PaperUnits='inches';fig.PaperPosition=[0 0 3*1.618 3];
+fig=gcf;fig.PaperUnits='inches';fig.PaperPosition=[0 0 3*1.618/15*6 3];
 
+%    level 0                level 1                level 2
+a=[
+  0  404  1.7e+04  41.1350  404  2.3e+04  41.1350  404  2.3e+04  41.1350
+  1  318  3.8e+03  32.7491  256  5.7e+03  18.7110  206  7.0e+03  17.3239
+  2  301  9.7e+02  32.1707  207  8.6e+02  12.4703  158  1.5e+03   6.7618
+  3  298  1.7e+02  32.1117  193  1.8e+02  12.3845  132  4.8e+02   5.8985
+  4  297  2.8e+01  32.1524  187  4.6e+01  12.4139  127  1.6e+02   5.8555
+  5  297  4.4e+00  32.1613  186  1.4e+01  12.4230  126  6.5e+01   5.8706
+%-1  297  0        32.1629  185  0        12.4272  126  0         5.8894
+];
+
+clf;
+plot(a(:,1),a(:,2));hold on
+plot(a(:,1),a(:,5));
+plot(a(:,1),a(:,8));
+xlabel('Number of sweeps');
+%ylabel('PCG iterations');
+grid on
+fig=gcf;fig.PaperUnits='inches';fig.PaperPosition=[0 0 3*1.618/15*6 3];
