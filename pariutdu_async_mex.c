@@ -3,39 +3,12 @@
 #include <math.h>
 #include <omp.h>
 #include "mex.h"
+#include "check_sorted.h"
 
-#define WALLCLOCK(time) do {                                 \
-      unsigned long val;                                       \
-      volatile unsigned int a, d;                              \
-      __asm__ __volatile__("rdtsc" : "=a" (a), "=d" (d) : );   \
-      val = ((unsigned long) a)|(((unsigned long)d)<<32);      \
-      (time) = val / 3330000000.;                              \
-    } while(0)
-
-
-int check_sorted(int n, const mwIndex *ia, const mwIndex *ja)
-{
-    int i, j;
-
-    for (i=0; i<n; i++)
-    {
-        for (j=ia[i]; j<ia[i+1]-1; j++)
-        {
-            if (ja[j] >= ja[j+1])
-            {
-                printf("%d not sorted %d %d\n", i, ja[j], ja[j+1]);
-                return -1;
-            }
-        }
-    }
-
-    return 0;
-}
-
-void parilu(int n, int nnz, 
+void pariutdu(int n, int nnz,
         const int *rowind, const int *colind, const double *val,
-        const mwIndex *ial, const mwIndex *jal, double *al,
         const mwIndex *iau, const mwIndex *jau, double *au, 
+        double *ad, // diagonal entries
         int numiter, int numthreads)
 {
     int iter, k;
@@ -54,11 +27,11 @@ void parilu(int n, int nnz,
                 j = colind[k];
                 s = val[k];
 
-                il = ial[i];
+                il = iau[i];
                 iu = iau[j];
-                while (il < ial[i+1] && iu < iau[j+1])
+                while (il < iau[i+1] && iu < iau[j+1])
                 {
-                    jl = jal[il];
+                    jl = jau[il];
                     ju = jau[iu];
 
                     if (jl < ju)
@@ -67,19 +40,23 @@ void parilu(int n, int nnz,
                         iu++;
                     else
                     {
-                        s -= al[il] * au[iu];
+                        // we are going to modify this u entry
+                        s -= au[il] * au[iu] * ad[jl];
                         il++;
                         iu++;
                     }
                 }
 
-                s += al[il-1]*au[iu-1];
+                // undo the last operation (it must be the last)
+                s += au[il-1]*au[iu-1]*ad[i];
 
-                if (i>j)
-                    al[il-1] = s / au[iu-1];
+                // modify u entry
+                if (i == j)
+                    ad[i] = s;
                 else
-                    au[iu-1] = s;
+                    au[iu-1] = s / ad[i];
             }
+            // end omp loop
         }
     }
 }
@@ -92,16 +69,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 {
     int *rowind, *colind; // must be int32
     const double *val;
-    mwIndex *ial, *jal;
-    double *al;
     mwIndex *iau, *jau;
     double *au;
+    mwIndex *iad, *jad;
+    double *ad;
     int numiter;
     int numthreads;
     int n, nnz;
 
-    // [l u] = paric_mex(rowind, colind, val, l, u, numiter, numthreads)
-    // l must be stored in transposed form (CSC format)
+    // [u d] = pariutdu_mex(rowind, colind, val, u, d, numiter, numthreads)
     if (nrhs != 7)
         mexErrMsgTxt("mex function called with bad number of input arguments");
     if (nlhs != 2)
@@ -113,24 +89,25 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     numiter    = (int)  *mxGetPr(prhs[5]);
     numthreads = (int)  *mxGetPr(prhs[6]);
 
-    // copy initial l and u and use as output matrix (leave input untouched)
+    // copy initial guess u and use as output matrix (leave input untouched)
     plhs[0] = mxDuplicateArray(prhs[3]);
-    ial     = mxGetJc(plhs[0]);
-    jal     = mxGetIr(plhs[0]);
-     al     = mxGetPr(plhs[0]);
+    iau     = mxGetJc(plhs[0]);
+    jau     = mxGetIr(plhs[0]);
+     au     = mxGetPr(plhs[0]);
     plhs[1] = mxDuplicateArray(prhs[4]);
-    iau     = mxGetJc(plhs[1]);
-    jau     = mxGetIr(plhs[1]);
-     au     = mxGetPr(plhs[1]);
+    iad     = mxGetJc(plhs[1]);
+    jad     = mxGetIr(plhs[1]);
+     ad     = mxGetPr(plhs[1]);
 
     nnz = mxGetM(prhs[0]);
     n   = mxGetM(prhs[3]);
 
-    if (check_sorted(n, ial, jal))
-        mexErrMsgTxt("matrix L not sorted");
     if (check_sorted(n, iau, jau))
         mexErrMsgTxt("matrix U not sorted");
 
-    parilu(n, nnz, rowind, colind, val, ial, jal, al, 
-                                        iau, jau, au, numiter, numthreads);
+    // check that d is diagonal
+    if (iad[n] != n)
+        mexErrMsgTxt("input D not diagonal");
+
+    pariutdu(n, nnz, rowind, colind, val, iau, jau, au, ad, numiter, numthreads);
 }

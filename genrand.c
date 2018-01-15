@@ -3,10 +3,10 @@
 
 void main()
 {
-    int n = 203841;
+    int n = 203841; // set to whatever length you need
 
     int i;
-    srand(123);
+    srand(0); // set seed to 0
 
     for (i=0; i<n; i++)
     {

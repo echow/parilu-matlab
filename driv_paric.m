@@ -21,11 +21,11 @@ numthreads = 4;
 for trial = 1:5
 for numsweeps = 0:6
 
-  pat = spones(iluk(a,2)');
-  u = a.*pat + eps*pat;
-% u = triu(a);
+% pat = spones(iluk(a,2)');
+% u = a.*pat + eps*pat;
+  u = triu(a);
 
-  u = paric(a, u, numsweeps, numthreads);
+  u = paric(a, u, 1, numsweeps, numthreads);
   
   [x flag relres iter resvec] = pcg(a, b, 1e-6, 2000, u', u);
   if flag, error('did not converge'); 

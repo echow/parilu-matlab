@@ -3,39 +3,9 @@
 #include <math.h>
 #include <omp.h>
 #include "mex.h"
+#include "check_sorted.h"
 
-#define WALLCLOCK(time) do {                                 \
-      unsigned long val;                                       \
-      volatile unsigned int a, d;                              \
-      __asm__ __volatile__("rdtsc" : "=a" (a), "=d" (d) : );   \
-      val = ((unsigned long) a)|(((unsigned long)d)<<32);      \
-      (time) = val / 3330000000.;                              \
-    } while(0)
-
-
-int check_sorted(int n, const mwIndex *ia, const mwIndex *ja)
-{
-    int i, j;
-
-    for (i=0; i<n; i++)
-    {
-        for (j=ia[i]; j<ia[i+1]-1; j++)
-        {
-            if (ja[j] >= ja[j+1])
-            {
-                printf("%d not sorted %d %d\n", i, ja[j], ja[j+1]);
-                return -1;
-            }
-        }
-    }
-
-    return 0;
-}
-
-// compute upper triangular cholesky factor
-// this version is synchronous
-// warning: values in the initial guess will be overwritten
-void parilu_sym_sync(int n, int nnz,
+void paric_sync(int n, int nnz,
         const int *rowind, const int *colind, const double *val,
         const mwIndex *iau, const mwIndex *jau, double *au, double *ag,
         int numiter, int numthreads)
@@ -89,12 +59,15 @@ void parilu_sym_sync(int n, int nnz,
             }
             // end omp loop
 
-            // copy computed values into guess
-            for (k=0; k<iau[n]; k++)
-                ag[k] = au[k];
-
             if (failed)
                 mexErrMsgTxt("negative or zero pivot");
+
+            // copy computed values into guess
+            // but only if there is another iteration
+            if (iter < numiter)
+                for (k=0; k<iau[n]; k++)
+                    ag[k] = au[k];
+
         }
 }
 
@@ -124,23 +97,33 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     numiter    = (int)  *mxGetPr(prhs[4]);
     numthreads = (int)  *mxGetPr(prhs[5]);
 
-    // initial guess u, which is called g
-      n     = mxGetM(prhs[3]);
-    iag     = mxGetJc(prhs[3]);
-    jag     = mxGetIr(prhs[3]);
-     ag     = mxGetPr(prhs[3]);
-    if (check_sorted(n, iag, jag))
-        mexErrMsgTxt("initial guess not sorted");
-
     // copy initial guess u and use as output matrix (leave input untouched)
     plhs[0] = mxDuplicateArray(prhs[3]);
+      n     = mxGetM(plhs[0]);
     iau     = mxGetJc(plhs[0]);
     jau     = mxGetIr(plhs[0]);
      au     = mxGetPr(plhs[0]);
     if (check_sorted(n, iau, jau))
         mexErrMsgTxt("duplicated U not sorted");
 
+    // verify number of nonzeros in guess
     nnz = mxGetM(prhs[0]);
+    if (iau[n] != nnz)
+        mexErrMsgTxt("number of nonzeros is not consistent");
 
-    parilu_sym_sync(n, nnz, rowind, colind, val, iau, jau, au, ag, numiter, numthreads);
+    // allocate temp array (this can be the same as init guess for one sweep)
+    mxArray *temp;
+    if (numiter == 1)
+        temp = (mxArray *) prhs[3]; // discard const
+    else
+        temp = mxDuplicateArray(prhs[3]);
+
+    // get pointers to initial guess u, which is called g
+    iag     = mxGetJc(temp);
+    jag     = mxGetIr(temp);
+     ag     = mxGetPr(temp);
+    if (check_sorted(n, iag, jag))
+        mexErrMsgTxt("initial guess not sorted");
+
+    paric_sync(n, nnz, rowind, colind, val, iau, jau, au, ag, numiter, numthreads);
 }

@@ -1,5 +1,5 @@
-function u = parict(a, u, sync_notsync, numsweeps, numthreads)
-% u = parict(a, u, sync_notsync, numsweeps, numthreads)
+function [u d] = pariutdut(a, u, d, sync_notsync, numsweeps, numthreads)
+% [u d] = pariutdut(a, u, d, sync_notsync, numsweeps, numthreads)
 
 % notes:
 % ordering for find is important
@@ -7,8 +7,7 @@ function u = parict(a, u, sync_notsync, numsweeps, numthreads)
 % could redesign this function so that it only performs a single sweep
 
 n = length(a);
-nz = nnz(triu(a)); % bug: fixed 11/23/2017
-nz = nnz(u);       % bug: fixed 11/23/2017
+nz = nnz(u); % bug fixed 11/23/2017
 
 for sweep = 1:numsweeps
 
@@ -23,9 +22,9 @@ for sweep = 1:numsweeps
   pat = spones(u); % updated pattern of u
   [Si Sj Sa] = find(a.*pat + eps*pat);
   if (sync_notsync)
-    u = paric_sync_mex(int32(Si)-1, int32(Sj)-1, Sa, u, 1, numthreads);
+    [u d] = pariutdu_sync_mex(int32(Si)-1, int32(Sj)-1, Sa, u, d, 1, numthreads);
   else
-    u = paric_async_mex(int32(Si)-1, int32(Sj)-1, Sa, u, 1, numthreads);
+    [u d] = pariutdu_async_mex(int32(Si)-1, int32(Sj)-1, Sa, u, d, 1, numthreads);
   end
 
   % delete small entries (keep only large entries)
@@ -40,9 +39,10 @@ for sweep = 1:numsweeps
   pat = spones(u);
   [Si Sj Sa] = find(a.*pat + eps*pat);
   if (sync_notsync)
-    u = paric_sync_mex(int32(Si)-1, int32(Sj)-1, Sa, u, 1, numthreads);
+    [u d] = pariutdu_sync_mex(int32(Si)-1, int32(Sj)-1, Sa, u, d, 1, numthreads);
   else
-    u = paric_async_mex(int32(Si)-1, int32(Sj)-1, Sa, u, 1, numthreads);
+    [u d] = pariutdu_async_mex(int32(Si)-1, int32(Sj)-1, Sa, u, d, 1, numthreads);
   end
 
 end
+
