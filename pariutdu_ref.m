@@ -5,8 +5,7 @@ function [u d resid] = pariutdu_ref(a, u0, d0, numsweeps)
 %
 % a         = sparse matrix should be scaled to have unit diagonal
 % u0        = input guess, with unit diagonal
-% d0        = input guess, usually the identity matrix, but may contain
-%             both positive and negative entries
+% d0        = input guess, usually the diagonal of A
 % numsweeps = number of nonlinear fixed-point sweeps
 % resid     = nonlinear residual norm history (optional)
 
@@ -36,7 +35,7 @@ for iter=1:numsweeps
             u(i,j) = s/dvec0(i);
         else
             if (s <= 0)
-              fprintf('note pivot %f  sweep %d  index %d\n', s, iter, i);
+              fprintf('pariutdu_ref: note pivot %f  sweep %d  index %d\n', s, iter, i);
             end
             dvec(i) = s;
         end

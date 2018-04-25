@@ -32,7 +32,7 @@ for iter=1:numsweeps
             u(i,j) = s/u0(i,i);
         else
             if (s <= 0)
-                fprintf('note pivot %f  sweep %d  index %d\n', s, iter, i);
+                fprintf('paric_ref: note pivot %f  sweep %d  index %d\n', s, iter, i);
             end
             u(i,j) = sqrt(s);
         end
@@ -43,4 +43,6 @@ for iter=1:numsweeps
     if nargout > 1
         resid(iter+1) = norm((a-u'*u).*spones(a),'fro');
     end
+
+    % disp(nnz(imag(u)))
 end
