@@ -55,22 +55,6 @@ Please supply your own test matrices in these drivers and edit as necessary:
   driv_parict.m
 
 
-Scaling
--------
-
-To aid convergence of the fixed-point iterations, the input matrix A
-must generally be scaled such that the diagonal is all ones, or is all
-ones in magnitude.  It is recommended to perform this scaling symmetrically 
-whenever possible.
-
-The following symmetrically scales matrix a:
-
-        n = size(a,2);
-        d = diag(a);
-        d = 1./sqrt(abs(d));
-        d = spdiags(d,0,n,n);
-        a = d*a*d;
-
 
 Initial Guesses
 ---------------
@@ -83,10 +67,27 @@ factors have the following requirements:
   IC:    U has a full diagonal
   IUTDU: U has a unit diagonal; D is diagonal with no zeros on diagonal
 
+It is recommended to use initial guess based on the 
+Symmetric Gauss-Seidel approximation:
+
+A \approx L_A D_A^{-1} U_A = (L_A D_A^{-1}) D_A (D_A^{-1} U_A)
+
+where
+
+L_A = tril(A)
+D_A = diag(A)
+U_A = triu(A)
+
+thus the initial guesses are:
+
+LU:    L = L_A D_A^{-1},   U = U_A
+LL^T:  L = L_A D_A^{-1/2}
+LDU^T: L = L_A D_A^{-1},   D = D_A,   U = D_A^{-1} U_A
+
 If the matrix A has been scaled such that its diagonal is all ones,
 then the standard initial guess is to use the triangular parts of A
-as the initial guess.  If the matrix is not properly scaled, then
-this choice of initial guess is not appropriate.
+as the initial guess.  To be clear, however, it is not necessary
+to scale the matrix if the above recommended initial guesses are used.
 
 The sparsity pattern of the initial guess does not have to be related
 to the pattern of matrix A.  To specify explicit zeros in the initial
