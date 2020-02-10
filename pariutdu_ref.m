@@ -3,15 +3,16 @@ function [u d resid] = pariutdu_ref(a, u0, d0, numsweeps)
 % compute: u'*d*u, where u has unit diagonal and d is diagonal
 %   Synchronous updates
 %
-% a         = sparse matrix should be scaled to have unit diagonal
+% a         = input sparse matrix
 % u0        = input guess, with unit diagonal
 % d0        = input guess, usually the diagonal of A
 % numsweeps = number of nonlinear fixed-point sweeps
 % resid     = nonlinear residual norm history (optional)
 
 if nargout > 2
+    pat = spones(u0+u0');
     resid = zeros(numsweeps+1, 1);
-    resid(1) = norm((a-u0'*d0*u0).*spones(a),'fro');
+    resid(1) = norm((a-u0'*d0*u0).*spones(pat),'fro');
 end
 
 % find nonzeros of u in column-major ordering
@@ -46,7 +47,7 @@ for iter=1:numsweeps
     dvec0 = dvec;
     
     if nargout > 2
-        resid(iter+1) = norm((a-u'*diag(dvec)*u).*spones(a),'fro');
+        resid(iter+1) = norm((a-u'*diag(dvec)*u).*spones(pat),'fro');
     end
 end
 d = diag(dvec);

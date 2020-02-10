@@ -3,7 +3,7 @@ function [l d u resid] = parildu_ref(a, l0, d0, u0, numsweeps)
 % compute: l*d*u, where l and u have unit diagonal and d is diagonal
 %   Synchronous updates
 %
-% a         = sparse matrix should be scaled to have unit diagonal
+% a         = input sparse matrix
 % l0        = input guess for L, with unit diagonal
 % d0        = input guess for D, usually the diagonal of A
 % u0        = input guess for U, with unit diagonal
@@ -11,8 +11,9 @@ function [l d u resid] = parildu_ref(a, l0, d0, u0, numsweeps)
 % resid     = nonlinear residual norm history (optional)
 
 if nargout > 3
+    pat = spones(l0+u0);
     resid = zeros(numsweeps+1, 1);
-    resid(1) = norm((a-l0*d0*u0).*spones(a),'fro');
+    resid(1) = norm((a-l0*d0*u0).*spones(pat),'fro');
 end
 
 % find nonzeros of offdiagonal l (ordering doesn't matter in synchronous case)
@@ -60,7 +61,7 @@ for iter=1:numsweeps
     dvec0 = dvec;
 
     if nargout > 3
-        resid(iter+1) = norm((a-l*diag(dvec)*u).*spones(a),'fro');
+        resid(iter+1) = norm((a-l*diag(dvec)*u).*spones(pat),'fro');
     end
 end
 d = diag(dvec);

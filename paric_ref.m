@@ -2,15 +2,16 @@ function [u resid] = paric_ref(a, u0, numsweeps)
 % [u resid] = paric_ref(a, u0, numsweeps)
 %   Synchronous updates
 %
-% a         = sparse matrix should be scaled to have unit diagonal
+% a         = input sparse matrix
 % u0        = input guess; pattern of u0 can be unrelated to matrix a
 % numsweeps = number of nonlinear fixed-point sweeps
 % u         = output computed upper triangular IC factor
 % resid     = nonlinear residual norm history (optional)
 
 if nargout > 1
+    pat = spones(u0+u0');
     resid = zeros(numsweeps+1, 1);
-    resid(1) = norm((a-u0'*u0).*spones(a),'fro');
+    resid(1) = norm((a-u0'*u0).*spones(pat),'fro');
 end
 
 % find nonzeros of u in column-major ordering
@@ -41,7 +42,7 @@ for iter=1:numsweeps
     u0 = u; % frozen u
     
     if nargout > 1
-        resid(iter+1) = norm((a-u'*u).*spones(a),'fro');
+        resid(iter+1) = norm((a-u'*u).*spones(pat),'fro');
     end
 
     % disp(nnz(imag(u)))

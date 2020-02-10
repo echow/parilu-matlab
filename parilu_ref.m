@@ -2,14 +2,16 @@ function [l u resid] = parilu_ref(a, l, u, numsweeps)
 % [l u resid] = parilu_ref(a, l, u, numsweeps)
 %   Synchronous updates
 %
-% a         = sparse matrix should be scaled to have unit diagonal
-% l, u      = input guesses; patterns can be unrelated to matrix a
+% a         = input sparse matrix
+% l, u      = input guesses; patterns can be unrelated to matrix a;
+%             diagonal of l should be all ones; output factors
 % numsweeps = number of nonlinear fixed-point sweeps
 % resid     = nonlinear residual norm history (optional)
 
 if nargout > 2
+    pat = spones(spones(l)+spones(u));
     resid = zeros(numsweeps+1, 1);
-    resid(1) = norm((a-l*u).*spones(a),'fro');
+    resid(1) = norm((a-l*u).*spones(pat),'fro');
 end
 
 % find nonzeros of u in column-major ordering
@@ -34,7 +36,7 @@ for iter=1:numsweeps
     end
     
     if nargout > 2
-        resid(iter+1) = norm((a-l*u).*spones(a),'fro');
+        resid(iter+1) = norm((a-l*u).*spones(pat),'fro');
     end
 end
 
