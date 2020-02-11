@@ -13,7 +13,7 @@ int check_sorted(int n, const mwIndex *ia, const mwIndex *ja)
 
     for (i=0; i<n; i++)
     {
-        for (j=ia[i]; j<ia[i+1]-1; j++)
+        for (j=ia[i]; j<(int)(ia[i+1])-1; j++)
         {
             if (ja[j] >= ja[j+1])
             {
